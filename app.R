@@ -30,6 +30,13 @@ ui <- fluidPage(
                                  "Luminal vs Basal A vs Basal B" = "Subtype"),
                   selected = "TNBC vs non-TNBC"),
       
+      selectInput("plot_type", 
+                  label = "Choose what to plot",
+                  choices = c("Boxplot" = 1, 
+                              "Unsorted bar plot" = 2,
+                              "Sorted bar plot" = 3),
+                  selected = 1),
+      
       textInput("gene", label = "Enter gene symbol of interest",
                 value = ""),
       
@@ -76,7 +83,7 @@ server <- function(input, output) {
   
   # Plot gene
   output$gene_plot <- renderPlot({
-    make_cool_plot(df = df_subset(), gene_symbol = input$gene, subtype_or_classification = input$subtype_set)
+    choose_and_plot(plot_type = input$plot_type, df = df_subset(), gene_symbol = input$gene, subtype_or_classification = input$subtype_set)
   })
   
 }
