@@ -39,10 +39,11 @@ ui <- fluidPage(
       
       textInput("gene", label = "Enter gene symbol of interest",
                 value = ""),
+      textInput("id", label = "Enter ENSEMBL ID of interest",
+                value = "")
       
-      actionButton("gene_check", label = "Check gene"),
-      
-      actionButton("plot_gene", label = "Plot gene")
+      #actionButton("gene_check", label = "Check gene"),
+      #actionButton("plot_gene", label = "Plot gene")
 
     ),
     
@@ -63,10 +64,12 @@ server <- function(input, output) {
       ensembl <- gene_symbol_lookup(input$gene)
       if(ensembl == FALSE){
         paste("Cannot find ", input$gene, "...", sep="")
-      } else {
+      } else if (length(ensembl) == 1){
         paste("Plotting data for gene", input$gene, "with ENSEMBL ID", ensembl)
+      } else if (length(ensembl) > 1){
+        paste("Multiple ENSEMBL IDs found for ", input$gene, ". Please specify which one to use:", paste(ensembl, collapse = ", "), sep="")
       }
-    } else {
+    } else{
       "Enter gene symbol to plot gene"
     }
   })
@@ -78,7 +81,7 @@ server <- function(input, output) {
   
   # Subset data frame
   df_subset <- reactive({
-    return(subset_data(df(), input$gene))
+    return(subset_data(df(), input$gene, input$id))
   })
   
   # Plot gene

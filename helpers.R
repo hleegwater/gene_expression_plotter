@@ -3,8 +3,10 @@
 library(tidyverse)
 # Information on the used data ----
 path_to_datasets <- "C:/Users/hanne/Documents/GitHub/gene_expression_plotter/datasets"
-datasets <- tibble( name = c("2D", "3D", "patient"),
-                    filename = c("HL200831_Log2NormalizedCounts_2DCellLines.csv","unknown", "unknown"))
+datasets <- tibble( name = c("2D", "3D", "proteomics"),
+                    filename = c("HL200831_Log2NormalizedCounts_2DCellLines.csv",
+                                 "HL200910_Log2NormalizedCounts_3DCellLines.csv", 
+                                 "HL200910_log2rati_data_proteomics.csv"))
 gene_symbol_table <- read_csv(file.path(path_to_datasets, "ENSEMBL identifiers to gene names.csv"), col_types = cols()) %>%
   select(ensemblID = "Gene stable ID", gene_symbol = "Gene name")
 # Define functions to read and preprocess data ----
@@ -27,9 +29,14 @@ gene_symbol_lookup <- function(gene_symbol){
   }
 }
 
-subset_data <- function(df, gene_symbol){
+subset_data <- function(df, gene_symbol, ensembl_id){
   # Look up ENSEMBL ID to subset data on
-  ensemblID <- gene_symbol_lookup(gene_symbol)
+  if(ensembl_id == ""){
+    ensemblID <- gene_symbol_lookup(gene_symbol)
+  } else {
+    ensemblID <- ensembl_id  
+  }
+  
   ## Subset expression data
   df_new <- df[c("CellLine", "classification", "Subtype", ensemblID),]
   # transpose data
