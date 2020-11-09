@@ -2,7 +2,7 @@
 
 library(tidyverse)
 # Information on the used data ----
-path_to_datasets <- "C:/Users/hanne/Documents/GitHub/gene_expression_plotter/datasets"
+path_to_datasets <- "datasets"
 datasets <- tibble( name = c("2D", "3D", "proteomics"),
                     filename = c("HL200831_Log2NormalizedCounts_2DCellLines.csv",
                                  "HL200910_Log2NormalizedCounts_3DCellLines.csv", 
