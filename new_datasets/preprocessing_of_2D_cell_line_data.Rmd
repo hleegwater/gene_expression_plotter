@@ -1,0 +1,52 @@
+# This file describes how the datasets used in this Shiny were generated
+# Most of this code is adapted from "RNA expression levels in human breast cancer cell line panel.Rmd", 
+# by Esmee Koedoot, written on 22 November 2016 and "HL200730 RNA expression for multiple genes.Rmd",
+# by Hanneke Leegwater
+# Hanneke Leegwater. 29-08-2020 & 21-01-2021.
+
+
+# R libraries & preparation
+```{r}
+library(tidyverse)
+library(vroom)
+```
+
+# Files to analyze
+```{r}
+input_file <- "original_files/20161122_NormalizedCounts_2DCellLines.txt"
+metadata_file <- "original_files/breast_cancer_subtypes.csv"
+```
+
+# Read cell line data and log2 transform
+And remove cell line MBA-MD-435s 
+```{r}
+## Read file
+cell_line_data2D <- vroom::vroom(input_file, col_types = cols()) %>%
+  column_to_rownames("EnsemblID") %>%
+  select(-MDAMB435s_2D_A)
+colnames(cell_line_data2D) <- gsub("_2D_A","", colnames(cell_line_data2D))
+
+## Log 2 transform
+cell_line_data2D <- log2(cell_line_data2D + 1) %>%
+  round(digits = 2)
+
+cell_line_data2D <- rownames_to_column(cell_line_data2D, "ENSEMBL_ID")
+dim(cell_line_data2D)
+head(cell_line_data2D)
+```
+
+
+
+# 2D cell line metadata
+```{r}
+cell_line_metadata2D <- vroom::vroom(metadata_file, col_types = cols())
+dim(cell_line_metadata2D)
+head(cell_line_metadata2D)
+```
+
+
+# Write to file
+```{r}
+save(cell_line_data2D, cell_line_metadata2D, file = "cell_line_data2D_for_shiny.RData")
+```
+

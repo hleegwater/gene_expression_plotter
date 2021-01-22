@@ -1,0 +1,54 @@
+# This file describes how the datasets used in this Shiny were generated
+# Most of this code is adapted from "RNA expression levels in human breast cancer cell line panel.Rmd", 
+# by Esmee Koedoot, written on 22 November 2016 and "HL200730 RNA expression for multiple genes.Rmd",
+# by Hanneke Leegwater
+# Hanneke Leegwater. 10-09-2020 and 21-01-2021
+
+
+# R libraries & preparation
+```{r}
+library(tidyverse)
+library(vroom)
+```
+
+# Files to analyze
+```{r}
+input_file <- "original_files/20161223_ProteomicsDF.txt"
+metadata_file <- "original_files/breast_cancer_subtypes.csv"
+```
+
+# Read cell line proteomics data
+And remove cell line MDAMB435s. 
+Also, remove some MDAMB468 types to reduce bias towards shared MDA-MB-468 properties
+and remove some SUM159 types to reduce bias towards SUM159PT properties and remove
+OCUBM, HBC100 and UACC812 because their subtype is not well documented
+## Add missing cell lines from Dai et al 2017 paper. 
+```{r}
+## Read file
+cell_line_dataprot <- vroom::vroom(input_file, col_types = cols()) %>%
+  select(-NAME, -MDAMB435s) %>%
+  select(-MDAMB468GFP, -MDAMB468LV105, -MDAMB468LV122, -MDAMB468PT) %>%
+  select(-SUM1597B3, -SUM1597C6, -OCUBM, -HBC100, -UACC812) %>%
+  rename("Hs578T" = "HS578T", "SUM1315MO2" = "SUM1315M02") %>%
+  column_to_rownames("UNIQID")
+
+cell_line_dataprot <- rownames_to_column(cell_line_dataprot, "ENSEMBL_ID")
+dim(cell_line_dataprot)
+head(cell_line_dataprot)
+```
+
+# 3D cell line metadata
+```{r}
+cell_line_metadataprot <- vroom::vroom(metadata_file, col_types = cols()) %>%
+  filter(CellLine %in% colnames(cell_line_dataprot))
+  
+
+dim(cell_line_metadataprot)
+head(cell_line_metadataprot)
+```
+
+
+# Write to file
+```{r}
+save(cell_line_dataprot, cell_line_metadataprot, file = "cell_line_dataprot_for_shiny.RData")
+```

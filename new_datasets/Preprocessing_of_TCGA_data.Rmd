@@ -1,0 +1,101 @@
+---
+title: "Preprocessing of TCGA data for Shiny"
+author: "Hanneke Leegwater"
+date: "21-1-2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Goal
+To prepare TCGA data to be plotted in the gene expression Shiny.
+
+## Approach
+Read tumor and healthy tissue data and prepare metadata to show TNBC, non-TNBC, 
+normal tissue and Unknown.
+```{r}
+library(tidyverse)
+library(vroom) # to read data frames faster
+```
+
+```{r}
+# Read tumor data
+
+tcga_data_tumor <- vroom::vroom("original_files/BRCA__illuminahiseq_rnaseqv2__GeneExp_PrimarySolidTumor.txt", col_types = cols()) %>%
+  select(-GeneSymbol) %>% column_to_rownames("EntrezID")
+colnames(tcga_data_tumor) <- gsub(".{16}$", "_tumor", colnames(tcga_data_tumor)) # remove the last part, so that you are left with the specific patient ID
+dim(tcga_data_tumor)
+tcga_data_tumor[1:5,1:5]
+
+# Read normal control data
+tcga_data_normal <- vroom::vroom("original_files/BRCA__illuminahiseq_rnaseqv2__GeneExp_SolidTissueNormal.txt", col_types = cols()) %>% 
+  select(-GeneSymbol) %>% column_to_rownames("EntrezID")
+colnames(tcga_data_normal) <- gsub(".{16}$", "_normal", colnames(tcga_data_normal)) 
+dim(tcga_data_normal)
+tcga_data_normal[1:5,1:5]
+```
+
+## Read metadata
+```{r}
+tcga_metadata <- vroom::vroom("original_files/BRCA_ClinicalData__nationwidechildrens.org_clinical_patient_brca new.txt", 
+                        col_types = cols()) %>% 
+  select(bcr_patient_barcode, 
+         breast_carcinoma_estrogen_receptor_status, 
+         breast_carcinoma_progesterone_receptor_status, 
+         lab_proc_her2_neu_immunohistochemistry_receptor_status)
+
+# set subtype
+subtype_function <- function(ER, PR, HER2){
+    if(ER == "Negative" & PR == "Negative" & HER2 == "Negative"){
+        return("TNBC")
+    }else if (ER == "Positive" | PR == "Positive" | HER2 == "Positive"){
+        return("NonTNBC")
+    }else{
+        return("Unknown subtype") # for example Negative Negative Equivocal
+    }
+}
+tcga_metadata <- tcga_metadata %>% 
+    rowwise() %>%
+    mutate(TNBC_status = subtype_function(breast_carcinoma_estrogen_receptor_status, 
+                                          breast_carcinoma_progesterone_receptor_status, 
+                                         lab_proc_her2_neu_immunohistochemistry_receptor_status))
+
+tcga_metadata$bcr_patient_barcode <- paste(tcga_metadata$bcr_patient_barcode, "tumor", sep = "_")
+dim(tcga_metadata)
+tcga_metadata[15:20,]
+
+```
+
+## Prepare metadata for shiny & write to file
+```{r}
+tcga_metadata <- select(tcga_metadata, bcr_patient_barcode, TNBC_status) %>%
+  rename("patient" = "bcr_patient_barcode")
+healthy_metadata <- data.frame(patient = colnames(tcga_data_normal),
+                               TNBC_status = "Normal tissue")
+
+tcga_metadata <- bind_rows(tcga_metadata, healthy_metadata)
+head(tcga_metadata)
+```
+
+## Log 2 transform and merge TCGA data to get file suitable for Shiny
+I decided to store processed datasets as Rdata objects 
+for easier speed and storage purposes.
+```{r}
+tcga_data <- inner_join(rownames_to_column(tcga_data_tumor, "entrez_id"), 
+                        rownames_to_column(tcga_data_normal, "entrez_id"), by = "entrez_id")
+dim(tcga_data_normal)
+dim(tcga_data_tumor)
+dim(tcga_data)
+
+# Log 2 transform & round to 2 digits for easier storage
+tcga_data <- column_to_rownames(tcga_data, "entrez_id")
+tcga_data <- log2(tcga_data + 1) %>%
+             round(digits = 2) %>%
+             rownames_to_column("entrez_id")
+save(tcga_data, tcga_metadata, file = "tcga_data_for_shiny.RData")
+
+```
+
+
