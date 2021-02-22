@@ -90,11 +90,15 @@ server <- function(input, output, session) {
     updateSelectizeInput(session, "subtype_set", choices = subtype_options())
   })
 
-  # Plot gene
-  output$gene_plot <- renderPlot({
+  gene_plot <- reactive({
     req(df_for_plot(), input$id, input$subtype_set, input$plot_type)
     choose_and_plot(plot_type = input$plot_type, df = df_for_plot(),
                     gene_symbol = input$id, subtype_to_plot = input$subtype_set)
+  })
+
+  # Plot gene
+  output$gene_plot <- renderPlot({
+    print(gene_plot())
   })
 
 
@@ -124,9 +128,7 @@ server <- function(input, output, session) {
             dataset = input$dataset, id = input$id, plot_type = input$plot_type)
     },
     content = function(file) {
-      png(file)
-      print(plotInput())
-      dev.off()
+      ggsave(file, plot = gene_plot(), device = "png")
     },
     contentType = "image/png"
   )
