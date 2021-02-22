@@ -2,12 +2,12 @@
 # Most of this code is adapted from "RNA expression levels in human breast cancer cell line panel.Rmd", 
 # by Esmee Koedoot, written on 22 November 2016 and "HL200730 RNA expression for multiple genes.Rmd",
 # by Hanneke Leegwater
-# Hanneke Leegwater. 10-09-2020
+# Hanneke Leegwater. 10-09-2020 and 21-01-2021
 
 
 # R libraries & preparation
 library(tidyverse)
-setwd("C:/Users/hanne/Documents/GitHub/gene_expression_plotter/datasets/")
+library(vroom)
 
 # Files to analyze
 input_file <- "20161208_NormalizedCountTable_AllBCCellLineSamples.txt"

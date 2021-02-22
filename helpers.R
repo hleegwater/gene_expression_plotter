@@ -101,7 +101,6 @@ subset_data <- function(dataset_name, id){
 make_boxplot <- function(df, gene_symbol, subtype_to_plot){
   ggplot(data = df, aes_string(x = subtype_to_plot, y = "expression")) +
     geom_boxplot(aes_string(fill = subtype_to_plot), alpha = 0.7) +
-    geom_jitter(shape = 21, aes_string(fill = subtype_to_plot)) +
     ylab("Log2 Expression Level") +
     ggtitle(gene_symbol) +
     scale_y_continuous(expand = c(0,0)) +
@@ -116,6 +115,23 @@ make_boxplot <- function(df, gene_symbol, subtype_to_plot){
           plot.title = element_text(hjust = 0.5))
 }
 
+make_boxplot_with_dots <- function(df, gene_symbol, subtype_to_plot){
+  ggplot(data = df, aes_string(x = subtype_to_plot, y = "expression")) +
+    geom_boxplot(aes_string(fill = subtype_to_plot), alpha = 0.7) +
+    geom_jitter(shape = 21, aes_string(fill = subtype_to_plot)) +
+    ylab("Log2 Expression Level") +
+    ggtitle(gene_symbol) +
+    scale_y_continuous(expand = c(0,0)) +
+    theme_classic() +
+    theme(axis.line.x = element_line(colour = "black"),
+          axis.line.y = element_line(colour = "black"),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.border = element_blank(),
+          panel.background = element_blank(),
+          legend.key = element_blank(),
+          plot.title = element_text(hjust = 0.5))
+}
 make_unsorted_barplot <- function(df, gene_symbol, subtype_to_plot){
   ggplot(data = df, aes(x = name, y = expression)) +
         geom_bar(aes_string(fill = subtype_to_plot), stat = "identity") +
@@ -159,6 +175,7 @@ make_sorted_barplot <-function(df, gene_symbol, subtype_to_plot){
 choose_and_plot <- function(plot_type, df, gene_symbol, subtype_to_plot){
   switch(plot_type,
          "box" = make_boxplot(df, gene_symbol, subtype_to_plot),
+         "box_d" = make_boxplot_with_dots(df, gene_symbol, subtype_to_plot),
          "bar_u" = make_unsorted_barplot(df, gene_symbol, subtype_to_plot),
          "bar_s" = make_sorted_barplot(df, gene_symbol, subtype_to_plot)
   )

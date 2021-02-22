@@ -7,6 +7,7 @@
 
 library(shiny)
 library(tidyverse)
+library(glue)
 source("helpers.R")
 
 # Define UI ----
@@ -32,6 +33,7 @@ ui <- fluidPage(
       selectInput("plot_type", 
                   label = "Choose what to plot",
                   choices = c("Boxplot" = "box", 
+                              "Boxplot with dots" = "box_d",
                               "Unsorted bar plot" = "bar_u",
                               "Sorted bar plot" = "bar_s"),
                   selected = 1),
@@ -43,7 +45,11 @@ ui <- fluidPage(
                   selected = "gene_symbol"),
       
       textInput("id", label = "Enter ID of interest",
-                value = "TP53")
+                value = "TP53"),
+      
+      # Export images
+      downloadButton("downloadData", "Save dataset"),
+      downloadButton("downloadPlot", "Save image")
 
     ),
     
@@ -88,6 +94,40 @@ server <- function(input, output, session) {
     choose_and_plot(plot_type = input$plot_type, df = df_for_plot(), 
                     gene_symbol = input$id, subtype_to_plot = input$subtype_set)
   })
+  
+  
+  
+  # Download data for plot
+  
+  output_filename <- reactive({
+    return(input$id)
+  })
+  
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      glue("Expression data for BC cell lines {dataset} {id} {plot_type}.csv",
+           dataset = input$dataset, id = input$id, plot_type = input$plot_type)
+    },
+    content = function(file) {
+      write_csv(df_for_plot(), file)
+    },
+    contentType = "text/csv"
+  )
+  
+  
+  # Download plot
+  output$downloadPlot <- downloadHandler(
+    filename = function(){
+      glue("Expression plot for BC cell lines {dataset} {id} {plot_type}.png",
+            dataset = input$dataset, id = input$id, plot_type = input$plot_type)
+    },
+    content = function(file) {
+      png(file)
+      print(plotInput())
+      dev.off()
+    },
+    contentType = "image/png"
+  )
   
 }
 

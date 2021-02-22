@@ -63,6 +63,7 @@ tcga_metadata <- tcga_metadata %>%
                                          lab_proc_her2_neu_immunohistochemistry_receptor_status))
 
 tcga_metadata$bcr_patient_barcode <- paste(tcga_metadata$bcr_patient_barcode, "tumor", sep = "_")
+tcga_metadata$tumor_vs_normal <- "Tumor"
 dim(tcga_metadata)
 tcga_metadata[15:20,]
 
@@ -70,11 +71,11 @@ tcga_metadata[15:20,]
 
 ## Prepare metadata for shiny & write to file
 ```{r}
-tcga_metadata <- select(tcga_metadata, bcr_patient_barcode, TNBC_status) %>%
+tcga_metadata <- select(tcga_metadata, bcr_patient_barcode, TNBC_status, tumor_vs_normal) %>%
   rename("patient" = "bcr_patient_barcode")
 healthy_metadata <- data.frame(patient = colnames(tcga_data_normal),
                                TNBC_status = "Normal tissue")
-
+healthy_metadata$tumor_vs_normal <- "Normal"
 tcga_metadata <- bind_rows(tcga_metadata, healthy_metadata)
 head(tcga_metadata)
 ```
