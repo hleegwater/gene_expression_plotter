@@ -76,6 +76,7 @@ server <- function(input, output, session) {
 
   # Subset data frame
   df_for_plot <- reactive({
+    req(gene_id_to_plot())
     return(subset_data(input$dataset, gene_id_to_plot()))
   })
 
@@ -91,6 +92,7 @@ server <- function(input, output, session) {
 
   # Plot gene
   output$gene_plot <- renderPlot({
+    req(df_for_plot(), input$id, input$subtype_set, input$plot_type)
     choose_and_plot(plot_type = input$plot_type, df = df_for_plot(),
                     gene_symbol = input$id, subtype_to_plot = input$subtype_set)
   })
