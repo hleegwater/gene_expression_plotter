@@ -1,2 +1,5 @@
 PlotsOfData*
 .Rproj.user
+.Rhistory
+new_datasets/original_files/*
+datasets/*
