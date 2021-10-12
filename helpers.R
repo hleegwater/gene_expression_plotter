@@ -35,10 +35,10 @@ get_error_string <- function(args){
 ############ To select one gene from a data frame ###########
 gene_symbol_lookup <- function(id_to_lookup, id_type = "gene_symbol", dataset_name = "2D", return_all = FALSE){
   ## Find the right row in the gene lookup table and return ID that you need for dataset_name
-  
+
   ##!!as.symbol(x) can put the column name id_type in here as variable
-  answer <- filter(gene_symbol_table, !!as.symbol(id_type) == id_to_lookup) 
-  
+  answer <- filter(gene_symbol_table, !!as.symbol(id_type) == id_to_lookup)
+
   ## Check if the answer is ok
   if(nrow(answer) == 0){
     error_string <- glue("Gene ID '{id_to_lookup}' not found in column '{id_type}' of the lookup table")
@@ -66,9 +66,9 @@ gene_symbol_lookup <- function(id_to_lookup, id_type = "gene_symbol", dataset_na
 }
 
 subset_data <- function(dataset_name, id){
-  # Subset the dataframe of interest and return transposed df with columns: 
+  # Subset the dataframe of interest and return transposed df with columns:
   # "name", "expression" and metadata
-  
+
   answer = switch(dataset_name,
       "2D" = filter(cell_line_data2D, ID == id),
       "3D" = filter(cell_line_data3D, ID == id),
@@ -82,9 +82,9 @@ subset_data <- function(dataset_name, id){
     return()
   }
   # transpose data
-  answer <- answer %>% 
-    gather(name, expression, -ID) 
-  
+  answer <- answer %>%
+    gather(name, expression, -ID)
+
   # add metadata
   answer = switch(dataset_name,
       "2D" = left_join(answer, cell_line_metadata2D, by = "name"),
@@ -98,10 +98,19 @@ subset_data <- function(dataset_name, id){
 }
 
 ########### Plots ###############
-make_boxplot <- function(df, gene_symbol, subtype_to_plot){
+get_y_axis_name <- function(dataset_name){
+  y_axis_name <- switch(dataset_name,
+                  "2D" = "Log2 Expression Level",
+                  "3D" = "Log2 Expression Level",
+                  "prot" = "relative protein abundance",
+                  "tcga" = "Log2 Expression Level")
+  return(y_axis_name)
+}
+
+make_boxplot <- function(df, gene_symbol, subtype_to_plot, dataset_name){
   ggplot(data = df, aes_string(x = subtype_to_plot, y = "expression")) +
     geom_boxplot(aes_string(fill = subtype_to_plot), alpha = 0.7) +
-    ylab("Log2 Expression Level") +
+    ylab(get_y_axis_name(dataset_name)) +
     ggtitle(gene_symbol) +
     scale_y_continuous(expand = c(0,0)) +
     theme_classic() +
@@ -115,11 +124,11 @@ make_boxplot <- function(df, gene_symbol, subtype_to_plot){
           plot.title = element_text(hjust = 0.5))
 }
 
-make_boxplot_with_dots <- function(df, gene_symbol, subtype_to_plot){
+make_boxplot_with_dots <- function(df, gene_symbol, subtype_to_plot, dataset_name){
   ggplot(data = df, aes_string(x = subtype_to_plot, y = "expression")) +
     geom_boxplot(aes_string(fill = subtype_to_plot), alpha = 0.7) +
     geom_jitter(shape = 21, aes_string(fill = subtype_to_plot)) +
-    ylab("Log2 Expression Level") +
+    ylab(get_y_axis_name(dataset_name)) +
     ggtitle(gene_symbol) +
     scale_y_continuous(expand = c(0,0)) +
     theme_classic() +
@@ -132,10 +141,10 @@ make_boxplot_with_dots <- function(df, gene_symbol, subtype_to_plot){
           legend.key = element_blank(),
           plot.title = element_text(hjust = 0.5))
 }
-make_unsorted_barplot <- function(df, gene_symbol, subtype_to_plot){
+make_unsorted_barplot <- function(df, gene_symbol, subtype_to_plot, dataset_name){
   ggplot(data = df, aes(x = name, y = expression)) +
         geom_bar(aes_string(fill = subtype_to_plot), stat = "identity") +
-        ylab("Log2 Expression Level") +
+        ylab(get_y_axis_name(dataset_name)) +
         xlab("Cell line") +
         ggtitle(gene_symbol) +
         scale_y_continuous(expand = c(0,0)) +
@@ -152,10 +161,10 @@ make_unsorted_barplot <- function(df, gene_symbol, subtype_to_plot){
               plot.title = element_text(hjust = 0.5))
 }
 
-make_sorted_barplot <-function(df, gene_symbol, subtype_to_plot){
+make_sorted_barplot <-function(df, gene_symbol, subtype_to_plot, dataset_name){
   ggplot(data = df, aes(x = reorder(name, -expression), y = expression)) +
         geom_bar(aes_string(fill = subtype_to_plot), stat = "identity") +
-        ylab("Log2 Expression Level") +
+        ylab(get_y_axis_name(dataset_name)) +
         xlab("Cell line") +
         ggtitle(gene_symbol) +
         scale_y_continuous(expand = c(0,0)) +
@@ -172,11 +181,11 @@ make_sorted_barplot <-function(df, gene_symbol, subtype_to_plot){
               plot.title = element_text(hjust = 0.5))
 }
 
-choose_and_plot <- function(plot_type, df, gene_symbol, subtype_to_plot){
+choose_and_plot <- function(plot_type, df, gene_symbol, subtype_to_plot, dataset_name){
   switch(plot_type,
-         "box" = make_boxplot(df, gene_symbol, subtype_to_plot),
-         "box_d" = make_boxplot_with_dots(df, gene_symbol, subtype_to_plot),
-         "bar_u" = make_unsorted_barplot(df, gene_symbol, subtype_to_plot),
-         "bar_s" = make_sorted_barplot(df, gene_symbol, subtype_to_plot)
+         "box" = make_boxplot(df, gene_symbol, subtype_to_plot, dataset_name),
+         "box_d" = make_boxplot_with_dots(df, gene_symbol, subtype_to_plot, dataset_name),
+         "bar_u" = make_unsorted_barplot(df, gene_symbol, subtype_to_plot, dataset_name),
+         "bar_s" = make_sorted_barplot(df, gene_symbol, subtype_to_plot, dataset_name)
   )
 }
