@@ -116,7 +116,9 @@ server <- function(input, output, session) {
            dataset = input$dataset, id = input$id, plot_type = input$plot_type)
     },
     content = function(file) {
-      write_csv(df_for_plot(), file)
+      df_to_write = df_for_plot()
+      names(df_to_write)[names(df_to_write) == "expression"] <- get_y_axis_name(input$dataset)
+      write_csv(df_to_write, file)
     },
     contentType = "text/csv"
   )
